@@ -150,6 +150,9 @@ namespace AlexKosau.BuildTools.JUnitLogger.JUnitSchema
 
         [XmlAttribute("status")]
         public string Status { get; set; }
+
+        [XmlAttribute("result")]
+        public string Result { get; set; }
     }
 
     public class TestSuite
@@ -240,17 +243,17 @@ namespace AlexKosau.BuildTools.JUnitLogger.JUnitSchema
         [XmlAttribute("skipped")]
         public int Skipped { get; set; }
 
-        [XmlAttribute("timestamp")]
-        public DateTime Timestamp { get; set; }
+        //[XmlAttribute("timestamp")]
+        //public DateTime Timestamp { get; set; }
 
         [XmlAttribute("hostname")]
         public string Hostname { get; set; }
 
-        [XmlAttribute("id")]
-        public Guid Id { get; set; }
+        //[XmlAttribute("id")]
+        //public Guid Id { get; set; }
 
-        [XmlAttribute("package")]
-        public string Package { get; set; }
+        //[XmlAttribute("package")]
+        //public string Package { get; set; }
     }
 
     [XmlRoot("testsuites")]

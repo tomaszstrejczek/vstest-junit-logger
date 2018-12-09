@@ -101,26 +101,27 @@ namespace AlexKosau.BuildTools.JUnitLogger
             var testCase = new TestCase
             {
                 Name = e.Result.TestCase.DisplayName,
-                Classname = GetClassName(e.Result.TestCase.FullyQualifiedName),
-                Status = e.Result.Outcome.ToString(),
+                Classname = GetClassName(e.Result.TestCase.FullyQualifiedName), 
+                Result = e.Result.Outcome.ToString(),
+                Status = "run",
                 Time = e.Result.Duration.TotalSeconds,
             };
 
             if (e.Result.Outcome == TestOutcome.Skipped)
             {
-                    var methodInfo = this.GetTestMethodInfo(e.Result);
+                var methodInfo = this.GetTestMethodInfo(e.Result);
                 var description = this.GetDescription(methodInfo);
                 
-                testCase.Skipped = new Skipped
-                                       {
-                                           Text = "Yes",
-                                           Message = description ?? "---EMPTY---"
-                                       };
+                // testCase.Skipped = new Skipped
+                //                        {
+                //                            Text = "Yes",
+                //                            Message = description ?? "---EMPTY---"
+                //                        };
             }
 
-            IncludeErrorsAndFailures(e, testCase);
-            this.PrintSourceCodeInformation(e, testCase);
-            IncludeMessages(e, testCase);
+            //IncludeErrorsAndFailures(e, testCase);
+            //this.PrintSourceCodeInformation(e, testCase);
+            //IncludeMessages(e, testCase);
 
             testCases.Enqueue(testCase);
         }
@@ -268,26 +269,32 @@ namespace AlexKosau.BuildTools.JUnitLogger
                         (int)e.TestRunStatistics[TestOutcome.None] + (int)e.TestRunStatistics[TestOutcome.NotFound],
                     Tests = (int)e.TestRunStatistics.ExecutedTests,
                     TestCases = testCases.ToList(),
-                    Timestamp = DateTime.Now,
+                    //Timestamp = DateTime.Now,
                     Time = e.ElapsedTimeInRunningTests.TotalSeconds,
-                    SystemOut = string.Join(Environment.NewLine, stdOut),
-                    Hostname = machineName,
-                    Properties = new List<property>
-                    {
-                        new property {Name = "IsAborted", Value = e.IsAborted.ToString()},
-                        new property {Name = "IsCanceled", Value = e.IsCanceled.ToString()},
-                    }
+                    //SystemOut = string.Join(Environment.NewLine, stdOut),
+                    //Hostname = machineName,
+                    Properties = null,
+                    // Properties = new List<property>
+                    // {
+                    //     new property {Name = "IsAborted", Value = e.IsAborted.ToString()},
+                    //     new property {Name = "IsCanceled", Value = e.IsCanceled.ToString()},
+                    // }
                 };
 
                 if (e.Error != null)
                 {
                     result.SystemOut = e.Error + Environment.NewLine + result.SystemOut;
-                    result.Properties.Add(new property { Name = "Error", Value = e.Error.ToString() });
+                    //result.Properties.Add(new property { Name = "Error", Value = e.Error.ToString() });
                 }
 
                 root.TestSuites.Add(result);
 
                 var ser = new XmlSerializer(typeof(TestRun));
+                var settings = new XmlWriterSettings();                
+                settings.OmitXmlDeclaration = true;
+                settings.Indent = true;
+                var emptyNamespaces = new XmlSerializerNamespaces(new[] { XmlQualifiedName.Empty });
+
                 string fileName;
                 if (!startupParameters.TryGetValue("TestResultsFile", out fileName) ||
                     string.IsNullOrWhiteSpace(fileName))
@@ -296,8 +303,9 @@ namespace AlexKosau.BuildTools.JUnitLogger
                 }
                 Console.WriteLine("Writing the results into {0}", Path.GetFullPath(fileName));
                 using (FileStream fs = File.Create(fileName))
+                using (var writer = XmlWriter.Create(fs, settings))
                 {
-                    ser.Serialize(fs, root);
+                    ser.Serialize(writer, root, emptyNamespaces);
                 }
             }
             catch (IOException ex)
